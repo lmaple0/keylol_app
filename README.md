@@ -19,7 +19,7 @@ flutter build apk --debug --target-platform android-arm64
 
 Android 包名为 `io.github.lmaple0.keylol`，桌面名称为 `KeylolF M`，可与原版并存。debug 构建不需要上游签名密钥。未使用的上游 Android Firebase 配置已移除。
 
-`Build and test Android` Actions 工作流在 main、fix/sms-web-login 推送以及 PR 时运行，APK 输出在对应运行的 `keylolf-m-arm64-debug-apk` Artifact 中。
+`Build Android arm64` Actions 工作流仅解析一次依赖、构建 arm64 APK 并上传，在 main、fix/sms-web-login 推送或手动触发时运行。APK 位于对应运行的 `keylolf-m-arm64-debug-apk` Artifact 中。
 
 ## 研究与验证
 

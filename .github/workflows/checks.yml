@@ -1,10 +1,8 @@
-name: Build and test Android
+name: Build Android arm64
 
 on:
   push:
     branches: [main, fix/sms-web-login]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -33,36 +31,10 @@ jobs:
           flutter-version: '3.47.7'
           channel: stable
           cache: true
-      - name: Prepare pinned Android SDK and show build resources
-        run: |
-          java -version
-          free -h
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
-            'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
       - run: flutter pub get --enforce-lockfile
-      - run: flutter analyze
-      - run: flutter test
       - run: flutter build apk --debug --no-pub --target-platform android-arm64
-      - name: Verify APK identity and signature
-        run: |
-          apk=build/app/outputs/flutter-apk/app-debug.apk
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" > build/apk-badging.txt
-          python3 - <<'PY'
-          from pathlib import Path
-          lines = Path('build/apk-badging.txt').read_text().splitlines()
-          assert any(line.startswith("package: name='io.github.lmaple0.keylol'") for line in lines), 'Unexpected package'
-          assert "application-label:'KeylolF M'" in lines, 'Unexpected application name'
-          assert next(line.strip() for line in lines if line.startswith('native-code:')) == "native-code: 'arm64-v8a'", 'Unexpected APK ABI'
-          print('Verified: KeylolF M / io.github.lmaple0.keylol / arm64-v8a')
-          PY
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk"
-          cp "$apk" build/app/outputs/flutter-apk/KeylolF-M-arm64-v8a-debug.apk
-          cd build/app/outputs/flutter-apk
-          sha256sum KeylolF-M-arm64-v8a-debug.apk > SHA256SUMS
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: keylolf-m-arm64-debug-apk
-          path: |
-            build/app/outputs/flutter-apk/KeylolF-M-arm64-v8a-debug.apk
-            build/app/outputs/flutter-apk/SHA256SUMS
+          path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14

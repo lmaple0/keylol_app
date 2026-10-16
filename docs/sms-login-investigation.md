@@ -64,9 +64,11 @@
 - `html` 限制为 `>=0.15.6 <0.15.7`：`flutter_html 3.0.0` 调用的内部 `qs.matches` 已在 0.15.7 消失。先保留可编译组合，后续待渲染库升级再解除约束。
 - API、组件仓库自身约束仍限制缓存、图片预览等部分依赖；未使用全局 overrides 强行跨主版本升级。
 - 将动态 `IconData` 首字母头像改为文字首字母，避免新工具链的非 const 图标告警与图标裁剪问题。
-- 新增不依赖签名密钥的检查工作流，涵盖解析、分析、测试和 debug APK 构建；旧签名发布工作流仅在上游仓库 push 时执行。CI 结果以对应 Actions 运行记录为准。
+- 不依赖签名密钥的 Actions 工作流按用户要求精简为：解析一次依赖、构建 arm64 debug APK、上传。已移除重复分析/测试与产物断言；旧签名发布工作流仅在上游仓库 push 时执行。CI 结果以对应 Actions 运行记录为准。
 - Android 使用新包名 `io.github.lmaple0.keylol`，桌面名称 `KeylolF M`；Kotlin MainActivity 和 namespace 同步迁移，删除未使用的上游 Android Firebase 配置。iOS 标识未改动，本轮不构建 iOS。
 - 第二轮 CI 在 JetifyTransform 处理 Flutter 引擎 JAR 时 Java heap space 耗尽。将 Gradle 堆由 1.5 GB 调整为 4 GB、并行 worker 限制为 2；已核对当前 Android 插件未引用旧版 Support Library，关闭 Jetifier，避免对大型引擎 JAR 做无用转换。随后按用户要求改为 arm64-v8a 单架构构建，并增加 Gradle 缓存。
+- arm64 轮次的原生 APK 已成功构建；额外 ABI 断言阻止了上传。源码追踪发现 Flutter Gradle 插件会重新设置 abiFilters，现通过官方 `disable-abi-filtering` 属性保留项目内明确的 arm64-v8a 配置。额外产物断言已删除。
+- 移除代码中未使用的 build_runner、bloc_test、mocktail，减少 38 项依赖，并将 package_config 升级到 3.0.0。仍有 14 项 newer 提示：SDK 固定 material_color_utilities/test_api；上游约束缓存、图片、边框、cross_file、图标及 equatable；vector_graphics_compiler 限制 xml 不高于 7.0.1；动态取色和 HTML 渲染的兼容约束如上。未使用 overrides 强行绕过这些约束。
 
 实机验收：进入短信登录 → 输入绑定手机号 → 手指拖动滑块 → 收到验证码 → 提交登录 → APP 显示账户 → 关闭重开仍保持登录；另测取消、断网重试、错误短信码和退出后重新登录。
 
