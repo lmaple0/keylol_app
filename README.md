@@ -1,4 +1,4 @@
-# KeylolF Maple
+# KeylolF M
 
 基于 [keylol-flutter/keylol_app](https://github.com/keylol-flutter/keylol_app) 的维护分支，Fork 位于 [lmaple0/keylol_app](https://github.com/lmaple0/keylol_app)。
 
@@ -14,12 +14,12 @@
 flutter pub get --enforce-lockfile
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --target-platform android-arm64
 ```
 
-Android 包名为 `io.github.lmaple0.keylol`，桌面名称为 `KeylolF Maple`，可与原版并存。debug 构建不需要上游签名密钥。未使用的上游 Android Firebase 配置已移除。
+Android 包名为 `io.github.lmaple0.keylol`，桌面名称为 `KeylolF M`，可与原版并存。debug 构建不需要上游签名密钥。未使用的上游 Android Firebase 配置已移除。
 
-`Build and test Android` Actions 工作流在 main、fix/sms-web-login 推送以及 PR 时运行，APK 输出在对应运行的 `keylol-maple-debug-apk` Artifact 中。
+`Build and test Android` Actions 工作流在 main、fix/sms-web-login 推送以及 PR 时运行，APK 输出在对应运行的 `keylolf-m-arm64-debug-apk` Artifact 中。
 
 ## 研究与验证
 
