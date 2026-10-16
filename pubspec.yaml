@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.1 <4.0.0'
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,9 +32,13 @@ dependencies:
   flutter:
     sdk: flutter
   keylol_api:
-    git: https://github.com/keylol-flutter/keylol_api.git
+    git:
+      url: https://github.com/keylol-flutter/keylol_api.git
+      ref: 7b30a23c8fddd27e2d58035de0d738aaa15fd67d
   discuz_widgets:
-    git: https://github.com/keylol-flutter/discuz_widgets.git
+    git:
+      url: https://github.com/keylol-flutter/discuz_widgets.git
+      ref: f8275640a31d19861e5f83452173e3b8fe7c1228
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -49,9 +54,13 @@ dependencies:
   lpinyin: ^2.0.3
   salomon_bottom_bar: ^3.3.2
   dio: ^5.1.2
+  dio_cookie_manager: ^3.0.0
+  cookie_jar: ^4.0.2
   logger: ^2.3.0
-  html: ^0.15.3
-  dynamic_color: ^1.6.5
+  # flutter_html 3.0.0 calls an internal selector removed in html 0.15.7.
+  html: '>=0.15.6 <0.15.7'
+  # 2.x uses material_ui ColorScheme; this app uses Flutter Material widgets.
+  dynamic_color: ^1.9.0
   date_format: ^2.0.7
   percent_indicator: ^4.2.3
   image_picker: ^1.0.4
@@ -62,20 +71,20 @@ dependencies:
   sticky_headers: ^0.3.0+2
   flutter_cache_manager: ^3.3.1
   flutter_html: ^3.0.0-beta.2
-  skeletonizer: ^2.1.0+1
+  skeletonizer: ^3.0.0
   flutter_native_splash: ^2.3.6
   dio_cache_interceptor: ^3.5.0
-  settings_ui: ^2.0.2
+  settings_ui: ^4.0.2
   flutter_material_color_picker: ^1.2.0
   about: ^2.1.3
-  package_info_plus: ^8.0.0
+  package_info_plus: ^10.2.2
   flutter_inappwebview: ^6.0.0
-  hydrated_bloc: ^10.1.1
+  hydrated_bloc: ^11.0.0
   path_provider: ^2.1.3
-  talker: ^4.2.3
-  talker_flutter: ^4.2.3
-  talker_dio_logger: ^4.2.3
-  talker_bloc_logger: ^4.2.3
+  talker: ^5.1.20
+  talker_flutter: ^5.1.20
+  talker_dio_logger: ^5.1.20
+  talker_bloc_logger: ^5.1.20
   collection: ^1.19.1
 
 dev_dependencies:

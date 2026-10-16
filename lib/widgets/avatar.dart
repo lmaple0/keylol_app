@@ -54,14 +54,18 @@ class Avatar extends StatelessWidget {
     if (username == null) {
       return Image.asset('images/unknown_avatar.jpg');
     } else {
-      final letter = PinyinHelper.getFirstWordPinyin(username!)
-          .toUpperCase()
-          .codeUnitAt(0);
+      final initials = PinyinHelper.getFirstWordPinyin(username!).toUpperCase();
+      final letter = initials.isEmpty
+          ? '?'
+          : String.fromCharCode(initials.runes.first);
       return Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: Icon(
-          IconData(letter),
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        alignment: Alignment.center,
+        child: Text(
+          letter,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }
