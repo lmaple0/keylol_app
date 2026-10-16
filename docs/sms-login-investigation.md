@@ -66,6 +66,7 @@
 - 将动态 `IconData` 首字母头像改为文字首字母，避免新工具链的非 const 图标告警与图标裁剪问题。
 - 新增不依赖签名密钥的检查工作流，涵盖解析、分析、测试和 debug APK 构建；旧签名发布工作流仅在上游仓库 push 时执行。CI 结果以对应 Actions 运行记录为准。
 - Android 使用新包名 `io.github.lmaple0.keylol`，桌面名称 `KeylolF Maple`；Kotlin MainActivity 和 namespace 同步迁移，删除未使用的上游 Android Firebase 配置。iOS 标识未改动，本轮不构建 iOS。
+- 第二轮 CI 在 JetifyTransform 处理 Flutter 引擎 JAR 时 Java heap space 耗尽。将 Gradle 堆由 1.5 GB 调整为 4 GB、并行 worker 限制为 2；已核对当前 Android 插件未引用旧版 Support Library，关闭 Jetifier，避免对大型引擎 JAR 做无用转换。工作流保留通用 APK 的多架构构建，并增加 Gradle 缓存。
 
 实机验收：进入短信登录 → 输入绑定手机号 → 手指拖动滑块 → 收到验证码 → 提交登录 → APP 显示账户 → 关闭重开仍保持登录；另测取消、断网重试、错误短信码和退出后重新登录。
 
