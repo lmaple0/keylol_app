@@ -59,7 +59,7 @@
 
 - Flutter 工具链固定为 3.47.7，Dart 最低 3.13，Flutter 最低 3.47；`.fvmrc` 和工作流同步。
 - 已更新锁文件中的 Dio、SharedPreferences、图片选择/链接打开、数据库等依赖，并升级 Skeletonizer 3、Settings UI 4、PackageInfo Plus 10、Hydrated Bloc 11、Talker 5 等主版本。
-- Android：AGP 8.12.1、Kotlin 2.2.0、Gradle 8.13、Java 17 字节码，最低 Android API 24。这符合已下载 PackageInfo Plus 文档的最低构建要求；原生构建仍需验证。
+- Android：AGP 8.12.1、Kotlin 2.2.20、Gradle 8.14.4、Java 17 字节码，最低 Android API 24。首轮 CI 发现 Flutter 3.47 的最低 Gradle/Kotlin 要求高于 PackageInfo Plus 文档；已按 Flutter 官方 SDK 内 DependencyVersionChecker 统一修正。
 - `dynamic_color` 保持兼容系列 1.9.0：2.x 改用 `material_ui.ColorScheme`，不能直接传入当前项目的 Flutter Material 组件。
 - `html` 限制为 `>=0.15.6 <0.15.7`：`flutter_html 3.0.0` 调用的内部 `qs.matches` 已在 0.15.7 消失。先保留可编译组合，后续待渲染库升级再解除约束。
 - API、组件仓库自身约束仍限制缓存、图片预览等部分依赖；未使用全局 overrides 强行跨主版本升级。
