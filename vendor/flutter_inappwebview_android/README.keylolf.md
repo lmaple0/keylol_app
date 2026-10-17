@@ -11,5 +11,9 @@ Changes in android/build.gradle:
   when configuring a debug build with minification disabled.
 - Set Java source and target compatibility to 17 instead of the Java 8 default.
 
-No Dart API changes or runtime Java changes. Remove the root dependency override
+MyCookieManager.java also converts Max-Age seconds to milliseconds when exporting
+cookies. The original code added seconds directly to a millisecond timestamp,
+shortening imported session lifetimes by roughly 1000 times.
+
+No Dart API changes. Remove the root dependency override
 when a stable upstream release includes these Android build changes.

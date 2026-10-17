@@ -85,3 +85,5 @@
 构建配置升级到 Gradle 9.3.1、AGP 9.1.1、Kotlin 2.4.0；APP 移除旧 kotlin-android 应用和 kotlinOptions，启用内置 Kotlin。根据 Flutter 3.47 当前兼容要求保留 android.newDsl=false，参见 [Flutter 迁移文档](https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers) 与 [AGP 兼容表](https://developer.android.com/build/releases/agp-9-1-0-release-notes)。flutter_inappwebview_android 未指定 Java 编译级别，单独为它设置 Java 17，不通过 -Xlint:-options 屏蔽告警。上游插件 Java 源码的 deprecated/unchecked 提示与构建工具版本过低是不同问题，最终原生构建结果以 Actions 为准。
 
 原生构建确认 WebView Android 1.1.3 的 proguard-android.txt 引用被 AGP 9 拒绝。将该稳定版运行时代码和原许可证保留在 vendor/flutter_inappwebview_android，仅修改 Java 17 编译配置与 ProGuard 默认文件为 proguard-android-optimize.txt；根 pubspec 使用明确的本地 override。未修改插件运行时 API，也未在 CI 中临时改写 pub-cache。
+
+另修正 MyCookieManager 导出 Cookie 时的 Max-Age 单位错误：秒数必须乘以 1000 才能加入毫秒时间戳。否则网页中仍有效的长效 Cookie 被导入 APP 后有效期缩短约千倍，可能在后续重启时丢失会话。

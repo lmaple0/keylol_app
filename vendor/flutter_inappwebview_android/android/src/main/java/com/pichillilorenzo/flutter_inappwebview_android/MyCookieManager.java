@@ -261,7 +261,7 @@ public class MyCookieManager extends ChannelDelegateImpl {
           } else if (cookieParamName.equalsIgnoreCase("Max-Age")) {
             try {
               long maxAge = Long.parseLong(cookieParamValue);
-              cookieMap.put("expiresDate", System.currentTimeMillis() + maxAge);
+              cookieMap.put("expiresDate", System.currentTimeMillis() + maxAge * 1000L);
             } catch (NumberFormatException e) {
               Log.e(LOG_TAG, "", e);
             }
