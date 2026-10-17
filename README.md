@@ -18,13 +18,15 @@ flutter test
 flutter build apk --debug --target-platform android-arm64
 ```
 
-Android 包名为 `io.github.lmaple0.keylol`，桌面名称为 `KeylolF M`，可与原版并存。debug 构建不需要上游签名密钥。未使用的上游 Android Firebase 配置已移除。
+Android 包名为 `io.github.lmaple0.keylol`，桌面名称为 `KeylolF M`，可与原版并存。正式版使用此维护仓库自己的固定签名密钥。未使用的上游 Android Firebase 配置已移除。
 
-`Build Android arm64` Actions 工作流仅解析一次依赖、构建 arm64 APK 并上传，在 main、fix/sms-web-login 推送或手动触发时运行。APK 位于对应运行的 `keylolf-m-arm64-debug-apk` Artifact 中。
+`Release Android arm64` 在推送 `v*` 标签时构建固定签名的 arm64 Release APK，并发布到 GitHub Releases；手动触发只上传 Artifact。debug 工作流保留为手动触发，避免重复构建。
+
+签名备份、首次安装及后续发布步骤见 [正式签名与发布](docs/releasing.md)。从旧 debug 版切换到正式版需要卸载旧维护版，此后的正式版可覆盖升级。
 
 ## 研究与验证
 
 - [短信故障、修复设计、依赖边界与验证结果](docs/sms-login-investigation.md)
 - [参考 Re:Source 的功能建议与 Flutter/Compose 判断](docs/product-notes.md)
 
-本机已完成 Dart Kernel 编译和自动化测试；Android 原生 APK 构建交由 GitHub Actions。真实手机号收码、手机 WebView 滑块、登录后重启保持等仍需实机验收。
+本机已完成 Dart Kernel 编译和会话回归测试，Android 原生构建交由 GitHub Actions。用户已实机确认短信流程及登录后帖子、个人资料访问正常；正式版使用 Release 构建和固定签名。
