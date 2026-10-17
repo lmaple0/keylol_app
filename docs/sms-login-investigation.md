@@ -87,3 +87,11 @@
 原生构建确认 WebView Android 1.1.3 的 proguard-android.txt 引用被 AGP 9 拒绝。将该稳定版运行时代码和原许可证保留在 vendor/flutter_inappwebview_android，仅修改 Java 17 编译配置与 ProGuard 默认文件为 proguard-android-optimize.txt；根 pubspec 使用明确的本地 override。未修改插件运行时 API，也未在 CI 中临时改写 pub-cache。
 
 另修正 MyCookieManager 导出 Cookie 时的 Max-Age 单位错误：秒数必须乘以 1000 才能加入毫秒时间戳。否则网页中仍有效的长效 Cookie 被导入 APP 后有效期缩短约千倍，可能在后续重启时丢失会话。
+
+## 冷启动恢复账户（2026-10-18，v1.0.2）
+
+用户报告关闭后台重开后必须重新登录。代码确认 AuthenticationBloc 每次以未登录启动，AuthenticationRepository 的流也无条件先发送未登录；AuthenticationStatusFetched 只由密码登录表单触发。首页调用 index() 读取网页，不触发移动 API 认证拦截器，所以磁盘 Cookie 即使有效，账户 UI 仍一直显示未登录。
+
+新增回归使用真实 PersistCookieJar 写入会话后，丢弃全部内存身份，再以新 CookieJar、Repository 和 AuthenticationBloc 模拟冷启动。旧代码因没有恢复请求而超时；修复后主动恢复 profile 并更新账户。启动过程中显示恢复状态，失败时显示重试入口并保留 Cookie；无会话直接进入游客状态，服务器明确拒绝已保存会话时才显示未登录。
+
+启动恢复、断网重试、服务器拒绝和首次启动共 4 项新测试，与原 8 项会话导入测试一起通过。此前测试只验证重载 Cookie 后发送 API 请求，未覆盖实际启动的账户恢复流程。本版本沿用正式签名，可覆盖 v1.0.1 安装；手机端的真实会话及后台重开仍需用户确认。

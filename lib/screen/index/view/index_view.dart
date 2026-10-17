@@ -34,12 +34,13 @@ class _IndexViewState extends State<IndexView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthenticationBloc, AuthenticationState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status &&
+          current.status != AuthenticationStatus.restoring,
       listener: (context, state) {
         context.read<IndexBloc>().add(IndexFetched());
       },
-      builder: (context, state) {
-        final uid = _getUid(state);
-
+      builder: (context, authentication) {
         return BlocConsumer<IndexBloc, IndexState>(
           listener: (context, state) {
             if (state.status == IndexStatus.failure) {
@@ -62,7 +63,7 @@ class _IndexViewState extends State<IndexView> {
               child: NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
-                    _buildAppbar(context, uid),
+                    _buildAppbar(context, authentication),
                     SliverToBoxAdapter(child: _buildCarousel(context, index)),
                     SliverToBoxAdapter(child: _buildTab(context, index)),
                   ];
@@ -84,16 +85,36 @@ class _IndexViewState extends State<IndexView> {
     }
   }
 
-  Widget _buildAppbar(BuildContext context, String uid) {
+  Widget _buildAppbar(
+    BuildContext context,
+    AuthenticationState authentication,
+  ) {
     return SliverAppBar(
       pinned: true,
       title: Text(AppLocalizations.of(context)!.indexPageTitle),
       actions: [
         const IndexSearchButton(),
-        Avatar(
-          uid: uid,
-          padding: const EdgeInsets.all(9),
-        ),
+        if (authentication is AuthenticationRestoreFailed)
+          IconButton(
+            tooltip: '恢复登录失败，点击重试',
+            onPressed: () => context.read<AuthenticationBloc>().add(
+              AuthenticationStatusFetched(),
+            ),
+            icon: const Icon(Icons.refresh),
+          )
+        else if (authentication.status == AuthenticationStatus.restoring)
+          const Padding(
+            padding: EdgeInsets.all(14),
+            child: SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
+        else
+          Avatar(
+            uid: _getUid(authentication),
+            padding: const EdgeInsets.all(9),
+          ),
         const SizedBox(width: 8.0),
       ],
     );
@@ -104,19 +125,14 @@ class _IndexViewState extends State<IndexView> {
     final threads = index == null
         ? List.generate(
             1,
-            (index) => Thread.fromJson({
-              'subject': 'Subject' * 4,
-              'cover': '',
-            }),
+            (index) => Thread.fromJson({'subject': 'Subject' * 4, 'cover': ''}),
           )
         : index.slideViewThreads;
     return Skeletonizer(
       enabled: index == null,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-        child: Carousel(
-          threads: threads,
-        ),
+        child: Carousel(threads: threads),
       ),
     );
   }
@@ -142,17 +158,15 @@ class _IndexViewState extends State<IndexView> {
         style: _index == index
             ? Theme.of(context).textTheme.headlineSmall
             : Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
       ),
     );
   }
 
   Widget _buildTab(BuildContext context, Index? index) {
     final threadMap = index == null
-        ? {
-            '最新主题': [],
-            '最新回复': [],
-          }
+        ? {'最新主题': [], '最新回复': []}
         : index.tabThreadMap;
     final hasLogin = threadMap.containsKey('最新回复');
 

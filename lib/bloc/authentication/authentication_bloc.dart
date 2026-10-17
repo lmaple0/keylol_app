@@ -15,16 +15,18 @@ class AuthenticationBloc
   late StreamSubscription<AuthenticationStatus> _streamSubscription;
 
   AuthenticationBloc(this._client, this._repository)
-      : super(AuthenticationUnauthenticated()) {
-    _streamSubscription = _repository.status
-        .listen((status) => add(AuthenticationStatusChanged(status)));
+    : super(AuthenticationRestoring()) {
+    _streamSubscription = _repository.status.listen(
+      (status) => add(AuthenticationStatusChanged(status)),
+    );
     on<AuthenticationStatusChanged>(_onAuthenticationStatusChanged);
     on<AuthenticationStatusFetched>(_onAuthenticationStatusFetched);
+    add(AuthenticationStatusFetched());
   }
 
   @override
   Future<void> close() async {
-    _streamSubscription.cancel();
+    await _streamSubscription.cancel();
     return super.close();
   }
 
@@ -33,6 +35,9 @@ class AuthenticationBloc
     Emitter<AuthenticationState> emit,
   ) async {
     switch (event.status) {
+      case AuthenticationStatus.restoring:
+        emit(AuthenticationRestoring());
+        break;
       case AuthenticationStatus.unauthenticated:
         emit(AuthenticationUnauthenticated());
         break;
@@ -46,6 +51,39 @@ class AuthenticationBloc
     AuthenticationStatusFetched event,
     Emitter<AuthenticationState> emit,
   ) async {
-    await _client.profile(null);
+    emit(AuthenticationRestoring());
+    try {
+      final cookies = await _client.cookies();
+      if (!cookies.any(
+        (cookie) => cookie.entries.any(
+          (entry) => entry.key.endsWith('_auth') && entry.value.isNotEmpty,
+        ),
+      )) {
+        emit(AuthenticationUnauthenticated());
+        return;
+      }
+      final response = await _client
+          .dio()
+          .post<Map<String, dynamic>>(
+            '/api/mobile/index.php',
+            queryParameters: {'module': 'profile'},
+          )
+          .timeout(const Duration(seconds: 15));
+      final profile = ApiResponse.empty(response.data!).variables;
+      _repository.profile = profile;
+      emit(
+        profile.memberUid.isEmpty || profile.memberUid == '0'
+            ? AuthenticationUnauthenticated()
+            : AuthenticationAuthenticated(profile),
+      );
+    } catch (_) {
+      // A network failure does not mean the saved session has expired.
+      final profile = _repository.profile;
+      emit(
+        profile.memberUid.isNotEmpty && profile.memberUid != '0'
+            ? AuthenticationAuthenticated(profile)
+            : AuthenticationRestoreFailed(),
+      );
+    }
   }
 }

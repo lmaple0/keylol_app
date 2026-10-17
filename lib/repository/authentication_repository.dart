@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:keylol_api/keylol_api.dart';
 import 'package:keylol_flutter/config/logger.dart';
 
-enum AuthenticationStatus { authenticated, unauthenticated }
+enum AuthenticationStatus { restoring, authenticated, unauthenticated }
 
 class AuthenticationRepository {
   final _controller = StreamController<AuthenticationStatus>();
@@ -13,10 +13,7 @@ class AuthenticationRepository {
     _controller.close();
   }
 
-  Stream<AuthenticationStatus> get status async* {
-    yield AuthenticationStatus.unauthenticated;
-    yield* _controller.stream;
-  }
+  Stream<AuthenticationStatus> get status => _controller.stream;
 
   Variables get profile => _profile;
 

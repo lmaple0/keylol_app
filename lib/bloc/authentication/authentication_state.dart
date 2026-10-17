@@ -12,11 +12,29 @@ class AuthenticationState extends Equatable {
 
 class AuthenticationUnauthenticated extends AuthenticationState {
   AuthenticationUnauthenticated()
-      : super(AuthenticationStatus.unauthenticated,
-            DefaultVariables.fromJson(const {}));
+    : super(
+        AuthenticationStatus.unauthenticated,
+        DefaultVariables.fromJson(const {}),
+      );
+}
+
+class AuthenticationRestoring extends AuthenticationState {
+  AuthenticationRestoring()
+    : super(
+        AuthenticationStatus.restoring,
+        DefaultVariables.fromJson(const {}),
+      );
+}
+
+class AuthenticationRestoreFailed extends AuthenticationState {
+  AuthenticationRestoreFailed()
+    : super(
+        AuthenticationStatus.restoring,
+        DefaultVariables.fromJson(const {}),
+      );
 }
 
 class AuthenticationAuthenticated extends AuthenticationState {
   const AuthenticationAuthenticated(Variables profile)
-      : super(AuthenticationStatus.authenticated, profile);
+    : super(AuthenticationStatus.authenticated, profile);
 }
