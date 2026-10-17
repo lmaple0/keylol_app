@@ -87,6 +87,11 @@ dependencies:
   talker_bloc_logger: ^5.1.20
   collection: ^1.19.1
 
+# Stable Android WebView implementation with the AGP 9 compatibility patch.
+dependency_overrides:
+  flutter_inappwebview_android:
+    path: vendor/flutter_inappwebview_android
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
