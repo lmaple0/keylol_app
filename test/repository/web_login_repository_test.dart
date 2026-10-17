@@ -44,6 +44,38 @@ class ProfileAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// Model Discuz authentication: auth and saltkey must belong to one session.
+class SessionAdapter implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? body,
+    Future<void>? cancelFuture,
+  ) async {
+    final cookies = (options.headers[HttpHeaders.cookieHeader] as String? ?? '')
+        .split('; ');
+    final authenticated =
+        cookies.contains('test_auth=session') &&
+        cookies
+                .where((cookie) => cookie.startsWith('test_saltkey='))
+                .toList()
+                .join() ==
+            'test_saltkey=browser';
+    return ResponseBody.fromString(
+      jsonEncode({
+        'Variables': {'member_uid': authenticated ? '42' : '0'},
+      }),
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
 void main() {
   late CookieJar destination;
   late Keylol client;
@@ -53,7 +85,12 @@ void main() {
     await destination.saveFromResponse(keylolOrigin, [
       Cookie('existing', 'preserved'),
     ]);
-    final dio = Dio(BaseOptions(queryParameters: {'version': '4'}));
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: keylolOrigin.toString(),
+        queryParameters: {'version': '4'},
+      ),
+    )..httpClientAdapter = ProfileAdapter('42');
     dio.interceptors.add(CookieManager(destination));
     client = Keylol(dio, destination);
   });
@@ -66,6 +103,60 @@ void main() {
     addTearDown(result.dispose);
     return result;
   }
+
+  test(
+    'import replaces guest cookies for subsequent requests and app restart',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'keylol-session-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      destination = PersistCookieJar(storage: FileStorage(directory.path));
+      await destination.saveFromResponse(keylolOrigin, [
+        Cookie('test_saltkey', 'guest')..path = '/',
+        Cookie('test_saltkey', 'guest-api')..path = '/api',
+        Cookie('test_auth', 'old')
+          ..domain = 'keylol.com'
+          ..path = '/',
+      ]);
+      final dio = Dio(BaseOptions(baseUrl: keylolOrigin.toString()))
+        ..httpClientAdapter = SessionAdapter();
+      dio.interceptors.add(CookieManager(destination));
+      client = Keylol(dio, destination);
+      final probe = Dio(BaseOptions(baseUrl: keylolOrigin.toString()))
+        ..httpClientAdapter = SessionAdapter();
+      final session = WebLoginRepository(client, probe: probe);
+      addTearDown(session.dispose);
+      expect(
+        (await session.importSession([
+          Cookie('test_auth', 'session')
+            ..domain = 'keylol.com'
+            ..path = '/',
+          Cookie('test_saltkey', 'browser')
+            ..domain = 'keylol.com'
+            ..path = '/',
+        ]))?.memberUid,
+        '42',
+      );
+      for (final module in ['profile', 'viewthread']) {
+        final response = await dio.get<Map<String, dynamic>>(
+          '/api/mobile/index.php',
+          queryParameters: {'module': module},
+        );
+        expect(response.data!['Variables']['member_uid'], '42', reason: module);
+      }
+      final restarted = Dio(BaseOptions(baseUrl: keylolOrigin.toString()))
+        ..httpClientAdapter = SessionAdapter();
+      restarted.interceptors.add(
+        CookieManager(PersistCookieJar(storage: FileStorage(directory.path))),
+      );
+      final response = await restarted.get<Map<String, dynamic>>(
+        '/api/mobile/index.php',
+        queryParameters: {'module': 'profile'},
+      );
+      expect(response.data!['Variables']['member_uid'], '42');
+    },
+  );
 
   test('only the HTTPS forum origin is accepted', () {
     expect(isKeylolOrigin(keylolLoginUri), isTrue);
@@ -87,6 +178,13 @@ void main() {
     expect(await repository(adapter).importSession([]), isNull);
     expect(adapter.requests, 0);
     expect((await destination.loadForRequest(keylolOrigin)).length, 1);
+  });
+
+  test('probe success alone cannot report an authenticated app session', () async {
+    client.dio().httpClientAdapter = ProfileAdapter('0');
+    expect(await repository(ProfileAdapter('42')).importSession([
+      Cookie('test_auth', 'session'),
+    ]), isNull);
   });
 
   test('expired or rejected auth cannot overwrite the app session', () async {

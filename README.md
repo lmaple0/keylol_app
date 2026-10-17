@@ -8,6 +8,7 @@
 
 - Flutter 3.47.7 / Dart 3.13.5（可用 `.fvmrc` 固定版本）。
 - Android 原生构建另需 JDK 17 或 21、Android SDK 36 与对应 NDK；最低支持 Android API 24。
+- 构建工具：Gradle 9.3.1、AGP 9.1.1、Kotlin 2.4.0，启用内置 Kotlin；当前 Flutter 仍需 `android.newDsl=false`。
 - Git 依赖固定在已核对提交，具体版本见 `pubspec.lock`。
 
 ```sh

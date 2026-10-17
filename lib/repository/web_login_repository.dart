@@ -15,8 +15,7 @@ bool isKeylolOrigin(Uri? uri) =>
     uri.port == 443 &&
     uri.userInfo.isEmpty;
 
-/// Verify a browser session before giving it to the application's API client.
-/// The probe uses its own cookie jar and has no application log interceptors.
+/// Import the browser session and confirm it through the app's API client.
 class WebLoginRepository {
   final Keylol client;
   final Dio probe;
@@ -41,6 +40,11 @@ class WebLoginRepository {
     )) {
       return null;
     }
+    // Android reports a domain even for host-only WebView cookies. Keylol's
+    // API sets host-only cookies; use that same scope so renewals replace them.
+    for (final cookie in cookies) {
+      cookie.domain = null;
+    }
     final jar = CookieJar();
     await jar.saveFromResponse(keylolOrigin, cookies);
     final manager = CookieManager(jar);
@@ -64,13 +68,23 @@ class WebLoginRepository {
         throw StateError('API cookie storage is unavailable');
       }
       // Keep cookies renewed by the profile request as well.
-      final verifiedCookies = await jar.loadForRequest(keylolOrigin);
+      final verifiedCookies = await jar.loadForRequest(
+        keylolOrigin.resolve('/api/mobile/index.php'),
+      );
       if (_disposed) return null;
+      // A merge leaves old guest cookies at other paths/domains in the request.
+      await destination.single.cookieJar.delete(keylolOrigin, true);
       await destination.single.cookieJar.saveFromResponse(
         keylolOrigin,
         verifiedCookies,
       );
-      return profile;
+      final appResponse = await client.dio().post<Map<String, dynamic>>(
+        '/api/mobile/index.php',
+        queryParameters: {'module': 'profile'},
+      );
+      if (_disposed) return null;
+      final appProfile = ApiResponse.empty(appResponse.data!).variables;
+      return (int.tryParse(appProfile.memberUid) ?? 0) > 0 ? appProfile : null;
     } finally {
       probe.interceptors.remove(manager);
     }

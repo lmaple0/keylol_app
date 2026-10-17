@@ -8,6 +8,15 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    // This plugin leaves javac at Java 8; the application already targets 17.
+    if (project.name == 'flutter_inappwebview_android') {
+        project.pluginManager.withPlugin('com.android.library') {
+            project.android.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+    }
 }
 subprojects {
     afterEvaluate { project ->

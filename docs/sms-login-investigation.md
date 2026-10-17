@@ -73,3 +73,13 @@
 实机验收：进入短信登录 → 输入绑定手机号 → 手指拖动滑块 → 收到验证码 → 提交登录 → APP 显示账户 → 关闭重开仍保持登录；另测取消、断网重试、错误短信码和退出后重新登录。
 
 维护分支保留上游出处，不使用上游私有签名。独立 Android applicationId 支持和原版并存安装。
+
+## 登录后仍是游客的修复（2026-10-17）
+
+用户确认短信流程可用，但帖子、资料请求仍报告未登录。原实现仅用临时 Dio 验证网页 Cookie，再合并进 APP 的旧 CookieJar；同名 host-only/domain/path Cookie 可以共存，旧游客 saltkey 会随新 auth 一起发出。Android WebView 返回的 domain 元数据也不能直接当作服务器 Set-Cookie 的原始作用域。
+
+修复将导入 Cookie 统一为其乐 host-only 作用域，先验证网页会话，清除主客户端其乐站点的旧 Cookie，再保存包含 API 续期结果的新会话。只有主客户端自身再次请求 profile 并得到有效 member_uid，登录页才报告成功。移除不区分会话的全局 HTTP 响应缓存，避免旧游客响应影响认证状态。
+
+新增回归复现旧实现的“探测成功、后续 profile 返回 0”，并覆盖帖子请求及 PersistCookieJar 磁盘重载；另验证临时探测成功而主客户端返回游客时不会报告成功。修复后会话测试共 8 项通过，真实账号仍需手机确认。
+
+构建配置升级到 Gradle 9.3.1、AGP 9.1.1、Kotlin 2.4.0；APP 移除旧 kotlin-android 应用和 kotlinOptions，启用内置 Kotlin。根据 Flutter 3.47 当前兼容要求保留 android.newDsl=false，参见 [Flutter 迁移文档](https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers) 与 [AGP 兼容表](https://developer.android.com/build/releases/agp-9-1-0-release-notes)。flutter_inappwebview_android 未指定 Java 编译级别，单独为它设置 Java 17，不通过 -Xlint:-options 屏蔽告警。上游插件 Java 源码的 deprecated/unchecked 提示与构建工具版本过低是不同问题，最终原生构建结果以 Actions 为准。

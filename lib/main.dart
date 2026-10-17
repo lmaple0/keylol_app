@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -55,12 +54,6 @@ void main() async {
           create: (context) => AuthenticationRepository(),
           child: RepositoryProvider(
             create: (context) {
-              client.addInterceptor(DioCacheInterceptor(
-                options: CacheOptions(
-                  store: MemCacheStore(),
-                  keyBuilder: CacheOptions.defaultCacheKeyBuilder,
-                ),
-              ));
               client.addInterceptor(AuthenticationInterceptor(
                 context.read<AuthenticationRepository>(),
               ));
